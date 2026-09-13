@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urljoin
 
 from ...core.config import DeviceCredentials, DriverConfig
@@ -7,16 +7,13 @@ from ...core.exceptions import DriverAuthenticationError, DriverConnectionError
 
 @dataclass(slots=True)
 class IsapiClient:
-    """Small ISAPI transport boundary.
-
-    Concrete HTTP I/O is intentionally kept behind this boundary so the driver
-    can later use an async HTTP implementation without changing its public API.
-    """
+    """Hikvision ISAPI request boundary with injectable async transport."""
 
     host: str
     credentials: DeviceCredentials
-    config: DriverConfig = DriverConfig()
+    config: DriverConfig = field(default_factory=DriverConfig)
     use_https: bool = False
+    request: object | None = None
 
     @property
     def base_url(self) -> str:
@@ -32,6 +29,20 @@ class IsapiClient:
         if not self.credentials.username:
             raise DriverAuthenticationError("Hikvision username is required")
 
-    def endpoint(self, path: str) -> str:
+    async def _request(self, method: str, path: str, body: str | bytes | None = None) -> object:
         self.validate()
-        return self.url(path)
+        if self.request is None:
+            raise NotImplementedError("Configure an HTTP request transport")
+        return await self.request(method, self.url(path), self.credentials, self.config.request_timeout, body)
+
+    async def get(self, path: str) -> object:
+        return await self._request("GET", path)
+
+    async def put(self, path: str, body: str | bytes) -> object:
+        return await self._request("PUT", path, body)
+
+    async def post(self, path: str, body: str | bytes) -> object:
+        return await self._request("POST", path, body)
+
+    async def device_info(self) -> object:
+        return await self.get("ISAPI/System/deviceInfo")
