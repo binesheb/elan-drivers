@@ -4,6 +4,7 @@ from .capabilities import Capability
 from .config import DeviceCredentials, DriverConfig
 from .device import Device, DeviceStatus
 from .driver import Driver
+from .events import DeviceEvent, EventType
 from .exceptions import (
     DriverAuthenticationError,
     DriverConnectionError,
@@ -14,6 +15,7 @@ from .registry import DriverRegistry
 
 __all__ = [
     "Capability", "Device", "DeviceStatus", "DeviceCredentials", "Driver",
-    "DriverConfig", "DriverError", "DriverAuthenticationError",
-    "DriverConnectionError", "UnsupportedCapabilityError", "DriverRegistry",
+    "DriverConfig", "DeviceEvent", "EventType", "DriverError",
+    "DriverAuthenticationError", "DriverConnectionError",
+    "UnsupportedCapabilityError", "DriverRegistry",
 ]
